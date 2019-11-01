@@ -1,29 +1,27 @@
 require('dotenv').config();
 var mosca = require('mosca');
 
-  var SECURE_KEY = __dirname + '/app/secure/key.pem';
-  var SECURE_CERT = __dirname + '/app/secure/cert.pem';
+  var SECURE_KEY = __dirname + '/secure/key.pem';
+  var SECURE_CERT = __dirname + '/secure/cert.pem';
   
   var settings = {
-    port: 1883,
+
     logger: {
-      name: "secureExample",
-      level: 40,
+      name: "mqtt",
+      level: 'info',
     },
-    http: {
-        port: +process.env.HTTP_PORT || 80
-    },
-    secure : {
-      port: +process.env.HTTPS_PORT || 443,
-      keyPath: SECURE_KEY,
-      certPath: SECURE_CERT,
-    }
+    interfaces: [
+        { type: "mqtt", port: +process.env.MQTT_PORT },
+        { type: "mqtts", port: +process.env.MQTTS_PORT, credentials: { keyPath: SECURE_KEY, certPath: SECURE_CERT } },
+        { type: "http", port: +process.env.HTTP_PORT, bundle: true },
+        { type: "https", port: +process.env.HTTPS_PORT, bundle: true, credentials: { keyPath: SECURE_KEY, certPath: SECURE_CERT } }
+    ]
   };
   var server = new mosca.Server(settings);
   server.on('ready', setup);
 
   var authenticate = function(client, username, password, callback) {
-    let user = process.env.USER;
+    let user = process.env.USERNAME;
     let pass = process.env.PASSWORD;
     var authorized = (username === user && password.toString() === pass);
     if (authorized) client.user = username;
